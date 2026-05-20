@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+:root {
+  --background: #030712;
+  --foreground: #f9fafb;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom dark scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111827;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* Hide scrollbar on mobile horizontal scroll */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Card utility class */
+.card {
+  background-color: #1f2937;
+  border-radius: 0.75rem;
+  border: 1px solid #374151;
+}
+
+/* Primary button */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Outlined button */
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  background: transparent;
+  color: #10b981;
+  border: 1.5px solid #10b981;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  cursor: pointer;
+}
+
+.btn-outline:hover {
+  background-color: rgba(16, 185, 129, 0.08);
+  transform: translateY(-1px);
+}
+
+/* Turf field texture overlay */
+.turf-bg {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 48px,
+      rgba(16, 185, 129, 0.04) 48px,
+      rgba(16, 185, 129, 0.04) 50px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 48px,
+      rgba(16, 185, 129, 0.04) 48px,
+      rgba(16, 185, 129, 0.04) 50px
+    );
+}

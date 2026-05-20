@@ -1,0 +1,367 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id                String   @id @default(cuid())
+  name              String
+  phone             String   @unique
+  email             String?  @unique
+  avatar            String?
+  role              String   @default("PLAYER") // PLAYER | ADMIN | SUPER_ADMIN
+  preferredPosition String?  // GK | DEF | MID | FWD | ANY
+  preferredFoot     String   @default("RIGHT") // LEFT | RIGHT | BOTH
+  skillLevel        Int      @default(5)
+  fitnessLevel      Int      @default(5)
+  aggressionLevel   Int      @default(5)
+  versatility       Int      @default(5)
+  gkWillingness     Boolean  @default(false)
+  notes             String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  sessions            Session[]
+  matchPlayers        MatchPlayer[]
+  waitlistEntries     WaitlistEntry[]
+  teamMembers         TeamMember[]
+  captainAssignments  CaptainAssignment[]
+  payments            Payment[]
+  stats               PlayerStats?
+  reliabilityScore    ReliabilityScore?
+  badges              PlayerBadge[]
+  notifications       Notification[]
+  matchEvents         MatchEvent[]
+  mvpVotesGiven       MvpVote[]          @relation("VoterRelation")
+  mvpVotesReceived    MvpVote[]          @relation("NomineeRelation")
+  createdMatches      Match[]            @relation("MatchCreator")
+  groupMemberships    GroupMember[]
+  announcements       Announcement[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OtpToken {
+  id        String   @id @default(cuid())
+  phone     String
+  otp       String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Venue {
+  id         String   @id @default(cuid())
+  name       String
+  address    String
+  city       String
+  latitude   Float?
+  longitude  Float?
+  mapLink    String?
+  amenities  String?  // JSON string
+  photos     String?  // JSON string
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  matches Match[]
+}
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  avatar      String?
+  isPrivate   Boolean  @default(false)
+  inviteCode  String   @unique @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members GroupMember[]
+  matches Match[]
+}
+
+model GroupMember {
+  id       String   @id @default(cuid())
+  groupId  String
+  userId   String
+  role     String   @default("MEMBER") // MEMBER | ADMIN | OWNER
+  joinedAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+}
+
+model Match {
+  id                 String    @id @default(cuid())
+  title              String
+  date               DateTime
+  startTime          String
+  endTime            String
+  venueId            String
+  format             String    @default("6v6") // 5v5 | 6v6 | 7v7 | 8v8
+  matchType          String    @default("CASUAL") // CASUAL | COMPETITIVE
+  skillLevel         String    @default("ALL") // ALL | BEGINNER | INTERMEDIATE | ADVANCED
+  maxPlayers         Int
+  minPlayers         Int
+  costPerPlayer      Float     @default(0)
+  totalCost          Float     @default(0)
+  status             String    @default("UPCOMING") // UPCOMING | CONFIRMED | IN_PROGRESS | COMPLETED | CANCELLED
+  cancellationRules  String?
+  turfRules          String?
+  jerseyTeamA        String    @default("#FF0000")
+  jerseyTeamB        String    @default("#0000FF")
+  weather            String?
+  notes              String?
+  isRecurring        Boolean   @default(false)
+  recurringPattern   String?   // DAILY | WEEKLY | BIWEEKLY | MONTHLY
+  parentMatchId      String?
+  teamsLocked        Boolean   @default(false)
+  confirmDeadline    DateTime?
+  createdById        String
+  groupId            String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  venue         Venue              @relation(fields: [venueId], references: [id])
+  createdBy     User               @relation("MatchCreator", fields: [createdById], references: [id])
+  group         Group?             @relation(fields: [groupId], references: [id])
+  players       MatchPlayer[]
+  waitlist      WaitlistEntry[]
+  teams         Team[]
+  payments      Payment[]
+  announcements Announcement[]
+  events        MatchEvent[]
+  mvpVotes      MvpVote[]
+  captainAssignments CaptainAssignment[]
+}
+
+model MatchPlayer {
+  id                 String    @id @default(cuid())
+  matchId            String
+  userId             String
+  status             String    @default("REGISTERED") // REGISTERED | CONFIRMED | ATTENDED | NO_SHOW | CANCELLED | LATE
+  registeredAt       DateTime  @default(now())
+  confirmedAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  isLateCancel       Boolean   @default(false)
+  position           String?
+  teamId             String?
+  paymentStatus      String    @default("PENDING") // PENDING | PAID | WAIVED | REFUNDED
+  checkedInAt        DateTime?
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, userId])
+}
+
+model WaitlistEntry {
+  id          String    @id @default(cuid())
+  matchId     String
+  userId      String
+  position    Int
+  joinedAt    DateTime  @default(now())
+  promotedAt  DateTime?
+  status      String    @default("WAITING") // WAITING | PROMOTED | EXPIRED | WITHDRAWN
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, userId])
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  matchId   String
+  name      String
+  color     String   @default("#FF0000")
+  score     Int      @default(0)
+  isWinner  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  match    Match               @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  members  TeamMember[]
+  captains CaptainAssignment[]
+  events   MatchEvent[]
+}
+
+model TeamMember {
+  id       String  @id @default(cuid())
+  teamId   String
+  userId   String
+  position String?
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+}
+
+model CaptainAssignment {
+  id         String   @id @default(cuid())
+  matchId    String
+  teamId     String
+  userId     String
+  assignedBy String
+  assignedAt DateTime @default(now())
+  isActive   Boolean  @default(true)
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  team  Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id            String    @id @default(cuid())
+  matchId       String
+  userId        String
+  amount        Float
+  status        String    @default("PENDING") // PENDING | PAID | REFUNDED | WAIVED | PARTIAL
+  method        String?   // UPI | CASH | BANK_TRANSFER
+  transactionId String?
+  upiRef        String?
+  screenshot    String?
+  paidAt        DateTime?
+  dueDate       DateTime?
+  penalty       Float     @default(0)
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  match Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PlayerStats {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  matchesPlayed    Int      @default(0)
+  matchesOrganised Int      @default(0)
+  goals            Int      @default(0)
+  assists          Int      @default(0)
+  cleanSheets      Int      @default(0)
+  mvpCount         Int      @default(0)
+  captainCount     Int      @default(0)
+  wins             Int      @default(0)
+  losses           Int      @default(0)
+  draws            Int      @default(0)
+  noShows          Int      @default(0)
+  lateCancels      Int      @default(0)
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ReliabilityScore {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  score        Float    @default(100)
+  tier         String   @default("BRONZE") // BRONZE | SILVER | GOLD | PLATINUM | LEGEND
+  totalMatches Int      @default(0)
+  attended     Int      @default(0)
+  noShows      Int      @default(0)
+  lateCancels  Int      @default(0)
+  lastUpdated  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Badge {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String
+  icon        String
+  category    String  // ATTENDANCE | PERFORMANCE | SOCIAL | SPECIAL
+  threshold   Int     @default(0)
+
+  players PlayerBadge[]
+}
+
+model PlayerBadge {
+  id       String   @id @default(cuid())
+  userId   String
+  badgeId  String
+  earnedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+}
+
+model Announcement {
+  id          String   @id @default(cuid())
+  matchId     String?
+  createdById String
+  title       String
+  content     String
+  type        String   @default("INFO") // INFO | WARNING | URGENT | CANCELLATION
+  sentAt      DateTime @default(now())
+  channels    String   @default("IN_APP") // IN_APP | WHATSAPP | BOTH
+
+  match     Match? @relation(fields: [matchId], references: [id], onDelete: SetNull)
+  createdBy User   @relation(fields: [createdById], references: [id])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  data      String?   // JSON string
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MatchEvent {
+  id          String   @id @default(cuid())
+  matchId     String
+  userId      String?
+  type        String   // GOAL | ASSIST | INJURY | SUBSTITUTION | YELLOW_CARD | RED_CARD | MVP_VOTE
+  minute      Int?
+  teamId      String?
+  description String?
+  createdAt   DateTime @default(now())
+
+  match Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user  User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  team  Team?  @relation(fields: [teamId], references: [id], onDelete: SetNull)
+}
+
+model MvpVote {
+  id        String   @id @default(cuid())
+  matchId   String
+  voterId   String
+  nomineeId String
+  createdAt DateTime @default(now())
+
+  match   Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  voter   User  @relation("VoterRelation", fields: [voterId], references: [id], onDelete: Cascade)
+  nominee User  @relation("NomineeRelation", fields: [nomineeId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, voterId])
+}
