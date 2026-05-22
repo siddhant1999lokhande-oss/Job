@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [countdown, setCountdown] = useState(0)
+  const [devOtp, setDevOtp] = useState('')
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
 
   useEffect(() => {
@@ -35,13 +36,16 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone }),
       })
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Failed to send OTP')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to send OTP')
+      // No SMS provider — OTP is returned directly in the response
+      if (data.otp) {
+        setDevOtp(data.otp)
+        setOtp(data.otp.split(''))
       }
       setStep('otp')
       setCountdown(60)
-      setTimeout(() => otpRefs.current[0]?.focus(), 100)
+      setTimeout(() => otpRefs.current[5]?.focus(), 100)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
@@ -115,14 +119,20 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     try {
-      await fetch('/api/auth/send-otp', {
+      const res = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone }),
       })
+      const data = await res.json()
+      if (data.otp) {
+        setDevOtp(data.otp)
+        setOtp(data.otp.split(''))
+      } else {
+        setOtp(['', '', '', '', '', ''])
+      }
       setCountdown(60)
-      setOtp(['', '', '', '', '', ''])
-      otpRefs.current[0]?.focus()
+      otpRefs.current[5]?.focus()
     } catch {
       setError('Failed to resend OTP')
     } finally {
@@ -218,6 +228,14 @@ export default function LoginPage() {
                   </div>
                 </div>
               </div>
+
+              {devOtp && (
+                <div className="mb-4 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center">
+                  <p className="text-amber-400 text-xs font-medium mb-1">⚡ No SMS connected — your OTP is:</p>
+                  <p className="text-amber-300 text-2xl font-bold tracking-[0.3em]">{devOtp}</p>
+                  <p className="text-amber-500/70 text-xs mt-1">Already filled in for you</p>
+                </div>
+              )}
 
               <form onSubmit={handleOtpSubmit} className="flex flex-col gap-6">
                 <div onPaste={handleOtpPaste} className="flex gap-2 justify-between">
