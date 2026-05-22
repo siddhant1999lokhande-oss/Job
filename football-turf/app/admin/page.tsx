@@ -76,7 +76,7 @@ export default function AdminDashboardPage() {
       fetch('/api/admin/activity', { headers }).then(r => r.json()),
     ])
       .then(([statsData, activityData]) => {
-        setStats(statsData)
+        if (statsData && !statsData.error) setStats(statsData)
         setActivity(activityData?.items ?? [])
       })
       .catch(() => {})

@@ -4,7 +4,7 @@ import { getSession } from '@/lib/auth'
 export async function GET(request: Request) {
   try {
     const session = await getSession(request)
-    if (!session || session.role !== 'ADMIN') {
+    if (!session || (session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN')) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 
