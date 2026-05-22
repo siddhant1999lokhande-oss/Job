@@ -101,9 +101,9 @@ export default function CreateMatchPage() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(form),
       })
-      if (!res.ok) throw new Error('Failed to create match')
       const data = await res.json()
-      router.push(`/matches/${data.id}`)
+      if (!res.ok) throw new Error(data.error || 'Failed to create match')
+      router.push(`/matches/${data.match.id}`)
     } catch (err: unknown) {
       setErrors({ title: err instanceof Error ? err.message : 'Failed to create match' })
     } finally {

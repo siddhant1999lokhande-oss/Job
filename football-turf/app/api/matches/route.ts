@@ -51,6 +51,10 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    if (session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const body = await request.json()
     const {
       title,
@@ -62,21 +66,23 @@ export async function POST(request: Request) {
       matchType,
       skillLevel,
       maxPlayers,
-      minPlayers,
       costPerPlayer,
-      totalCost,
       notes,
       turfRules,
-      jerseyTeamA,
-      jerseyTeamB,
+      // accept both naming conventions from the form
+      jerseyColorA, jerseyColorB,
+      jerseyTeamA, jerseyTeamB,
       groupId,
       isRecurring,
+      recurringDays,
       recurringPattern,
     } = body
 
-    if (!title || !date || !startTime || !endTime || !venueId || !maxPlayers || !minPlayers) {
-      return Response.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!title || !date || !startTime || !endTime || !venueId || !maxPlayers) {
+      return Response.json({ error: 'title, date, startTime, endTime, venueId and maxPlayers are required' }, { status: 400 })
     }
+
+    const parsedMax = parseInt(String(maxPlayers), 10)
 
     const match = await prisma.match.create({
       data: {
@@ -88,17 +94,17 @@ export async function POST(request: Request) {
         format: format ?? '6v6',
         matchType: matchType ?? 'CASUAL',
         skillLevel: skillLevel ?? 'ALL',
-        maxPlayers: parseInt(maxPlayers, 10),
-        minPlayers: parseInt(minPlayers, 10),
+        maxPlayers: parsedMax,
+        minPlayers: Math.max(2, Math.floor(parsedMax / 2)),
         costPerPlayer: costPerPlayer ?? 0,
-        totalCost: totalCost ?? 0,
+        totalCost: (costPerPlayer ?? 0) * parsedMax,
         notes: notes ?? null,
         turfRules: turfRules ?? null,
-        jerseyTeamA: jerseyTeamA ?? '#FF0000',
-        jerseyTeamB: jerseyTeamB ?? '#0000FF',
+        jerseyTeamA: jerseyTeamA ?? jerseyColorA ?? '#10b981',
+        jerseyTeamB: jerseyTeamB ?? jerseyColorB ?? '#3b82f6',
         groupId: groupId ?? null,
         isRecurring: isRecurring ?? false,
-        recurringPattern: recurringPattern ?? null,
+        recurringPattern: recurringPattern ?? (recurringDays?.length ? JSON.stringify(recurringDays) : null),
         createdById: session.userId,
       },
       include: {
