@@ -114,7 +114,8 @@ export async function POST(request: Request) {
 
     return Response.json({ success: true, match }, { status: 201 })
   } catch (error) {
-    console.error('POST /matches error:', error)
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : 'Unknown error'
+    console.error('POST /matches error:', msg)
+    return Response.json({ error: msg }, { status: 500 })
   }
 }
