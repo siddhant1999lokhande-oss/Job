@@ -54,6 +54,7 @@ export default function CreateMatchPage() {
   const [form, setForm] = useState<FormData>(INITIAL_FORM)
   const [venues, setVenues] = useState<Venue[]>([])
   const [loading, setLoading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
 
   useEffect(() => {
@@ -94,6 +95,7 @@ export default function CreateMatchPage() {
   const handleSubmit = async () => {
     if (!validateStep()) return
     setLoading(true)
+    setSubmitError('')
     const token = localStorage.getItem('turfmate_token')
     try {
       const res = await fetch('/api/matches', {
@@ -105,7 +107,7 @@ export default function CreateMatchPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to create match')
       router.push(`/matches/${data.match.id}`)
     } catch (err: unknown) {
-      setErrors({ title: err instanceof Error ? err.message : 'Failed to create match' })
+      setSubmitError(err instanceof Error ? err.message : 'Failed to create match')
     } finally {
       setLoading(false)
     }
@@ -422,7 +424,12 @@ export default function CreateMatchPage() {
 
       {/* Bottom action */}
       <div className="fixed bottom-0 left-0 right-0 px-4 py-4 bg-gray-950 border-t border-gray-800">
-        <div className="max-w-md mx-auto">
+        <div className="max-w-md mx-auto space-y-2">
+          {submitError && (
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-3 py-2 rounded-xl text-center">
+              {submitError}
+            </div>
+          )}
           {step < 2 ? (
             <button onClick={handleNext} className="btn-primary w-full py-3.5 flex items-center justify-center gap-2">
               Continue
