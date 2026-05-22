@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils'
 import { useAdminGuard } from '@/lib/use-admin-guard'
 
 const FORMATS = ['5v5', '6v6', '7v7', '8v8', '11v11']
-const SKILL_LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'MIXED']
-const MATCH_TYPES = ['CASUAL', 'COMPETITIVE', 'TRAINING', 'TOURNAMENT']
+const SKILL_LEVELS = ['ALL', 'BEGINNER', 'INTERMEDIATE', 'ADVANCED']
+const MATCH_TYPES = ['CASUAL', 'COMPETITIVE']
 
 interface Venue { id: string; name: string; address: string }
 
@@ -37,9 +37,9 @@ interface FormData {
 
 const INITIAL_FORM: FormData = {
   title: '', date: '', startTime: '', endTime: '', format: '6v6', matchType: 'CASUAL',
-  venueId: '', maxPlayers: 12, costPerPlayer: 150, skillLevel: 'MIXED',
+  venueId: '', maxPlayers: 12, costPerPlayer: 150, skillLevel: 'ALL',
   notes: '', turfRules: '', jerseyColorA: '#10b981', jerseyColorB: '#3b82f6',
-  cancellationPolicy: '24 hours notice required', isRecurring: false, recurringDays: [],
+  cancellationPolicy: '', isRecurring: false, recurringDays: [],
 }
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
