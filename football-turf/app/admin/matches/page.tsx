@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, Search, Plus, Edit2, Eye, XCircle, Copy, MoreVertical } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { formatMatchDate, formatMatchTime, cn } from '@/lib/utils'
+import { useAdminGuard } from '@/lib/use-admin-guard'
 
 interface AdminMatch {
   id: string
@@ -42,6 +43,8 @@ function getStatusVariant(status: string): 'success' | 'warning' | 'danger' | 'i
 
 export default function AdminMatchesPage() {
   const router = useRouter()
+  const { ready } = useAdminGuard()
+
   const [matches, setMatches] = useState<AdminMatch[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
@@ -81,6 +84,8 @@ export default function AdminMatchesPage() {
       fetchMatches()
     } catch {}
   }
+
+  if (!ready) return null
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-gray-950">

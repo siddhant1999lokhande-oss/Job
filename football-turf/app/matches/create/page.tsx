@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAdminGuard } from '@/lib/use-admin-guard'
 
 const FORMATS = ['5v5', '6v6', '7v7', '8v8', '11v11']
 const SKILL_LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'MIXED']
@@ -47,6 +48,8 @@ const STEP_LABELS = ['Basic Info', 'Venue & Players', 'Rules & Settings']
 
 export default function CreateMatchPage() {
   const router = useRouter()
+  const { ready } = useAdminGuard()
+
   const [step, setStep] = useState(0)
   const [form, setForm] = useState<FormData>(INITIAL_FORM)
   const [venues, setVenues] = useState<Venue[]>([])
@@ -114,6 +117,8 @@ export default function CreateMatchPage() {
       : [...form.recurringDays, day]
     set('recurringDays', days)
   }
+
+  if (!ready) return null
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-gray-950">

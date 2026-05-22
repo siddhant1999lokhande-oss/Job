@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils'
+import { useAdminGuard } from '@/lib/use-admin-guard'
 
 interface AdminStats {
   totalPlayers: number
@@ -59,11 +60,13 @@ const getActivityIcon = (type: string) => {
 
 export default function AdminDashboardPage() {
   const router = useRouter()
+  const { ready } = useAdminGuard()
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [activity, setActivity] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!ready) return
     const token = localStorage.getItem('turfmate_token')
     if (!token) { router.push('/login'); return }
     const headers = { Authorization: `Bearer ${token}` }
@@ -78,7 +81,9 @@ export default function AdminDashboardPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [router])
+  }, [router, ready])
+
+  if (!ready) return null
 
   const quickActions = [
     { label: 'Create Match', icon: Plus, href: '/matches/create', color: 'bg-emerald-500/10 text-emerald-400' },

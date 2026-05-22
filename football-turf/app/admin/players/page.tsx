@@ -2,16 +2,18 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Search, Send, MoreVertical, History, UserX, Edit2 } from 'lucide-react'
+import { ArrowLeft, Search, Send, MoreVertical, History, UserX, Edit2, ShieldCheck, ShieldX } from 'lucide-react'
 import { Avatar } from '@/components/ui/avatar'
 import { ReliabilityBadge } from '@/components/reliability-badge'
 import { Badge } from '@/components/ui/badge'
 import { getPositionLabel, cn } from '@/lib/utils'
+import { useAdminGuard } from '@/lib/use-admin-guard'
 
 interface AdminPlayer {
   id: string
   name: string
   phone: string
+  role: string
   skillLevel?: string
   preferredPosition?: string
   reliabilityScore: number
@@ -24,6 +26,8 @@ const SKILL_FILTERS = ['All', 'BEGINNER', 'INTERMEDIATE', 'ADVANCED']
 
 export default function AdminPlayersPage() {
   const router = useRouter()
+  const { ready } = useAdminGuard()
+
   const [players, setPlayers] = useState<AdminPlayer[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -33,6 +37,7 @@ export default function AdminPlayersPage() {
   const [showAnnounce, setShowAnnounce] = useState(false)
   const [announcement, setAnnouncement] = useState('')
   const [sending, setSending] = useState(false)
+  const [promotingId, setPromotingId] = useState<string | null>(null)
 
   const fetchPlayers = useCallback(async () => {
     setLoading(true)
@@ -52,9 +57,10 @@ export default function AdminPlayersPage() {
   }, [search, skillFilter, router])
 
   useEffect(() => {
+    if (!ready) return
     const t = setTimeout(fetchPlayers, search ? 400 : 0)
     return () => clearTimeout(t)
-  }, [fetchPlayers, search])
+  }, [fetchPlayers, search, ready])
 
   const toggleSelect = (id: string) => {
     setSelected(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id])
@@ -80,6 +86,27 @@ export default function AdminPlayersPage() {
     } catch {}
     finally { setSending(false) }
   }
+
+  const handlePromote = async (player: AdminPlayer) => {
+    const action = player.role === 'ADMIN' ? 'demote' : 'promote'
+    setPromotingId(player.id)
+    setActionMenuId(null)
+    const token = localStorage.getItem('turfmate_token')
+    try {
+      const res = await fetch('/api/admin/promote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ userId: player.id, action }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setPlayers(prev => prev.map(p => p.id === player.id ? { ...p, role: data.user.role } : p))
+      }
+    } catch {}
+    finally { setPromotingId(null) }
+  }
+
+  if (!ready) return null
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-gray-950" onClick={() => setActionMenuId(null)}>
@@ -187,6 +214,9 @@ export default function AdminPlayersPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-white text-sm font-semibold truncate">{player.name}</p>
+                      {player.role === 'ADMIN' && (
+                        <Badge variant="warning" className="text-[10px]">Admin</Badge>
+                      )}
                       {!player.isActive && <Badge variant="danger" className="text-[10px]">Inactive</Badge>}
                     </div>
                     <p className="text-gray-500 text-xs">+91 {player.phone}</p>
@@ -216,7 +246,7 @@ export default function AdminPlayersPage() {
 
                 {/* Inline actions */}
                 {actionMenuId === player.id && (
-                  <div className="border-t border-gray-700 grid grid-cols-3 divide-x divide-gray-700">
+                  <div className="border-t border-gray-700 grid grid-cols-4 divide-x divide-gray-700">
                     <button
                       onClick={() => router.push(`/admin/players/${player.id}/edit`)}
                       className="flex flex-col items-center gap-1 py-2.5 text-gray-400 hover:text-white hover:bg-gray-700/50"
@@ -231,6 +261,26 @@ export default function AdminPlayersPage() {
                       <History className="w-3.5 h-3.5" />
                       <span className="text-[10px]">History</span>
                     </button>
+                    {player.role !== 'SUPER_ADMIN' && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handlePromote(player) }}
+                        disabled={promotingId === player.id}
+                        className={cn(
+                          'flex flex-col items-center gap-1 py-2.5 disabled:opacity-50',
+                          player.role === 'ADMIN'
+                            ? 'text-amber-400 hover:bg-amber-500/10'
+                            : 'text-emerald-400 hover:bg-emerald-500/10',
+                        )}
+                      >
+                        {player.role === 'ADMIN'
+                          ? <ShieldX className="w-3.5 h-3.5" />
+                          : <ShieldCheck className="w-3.5 h-3.5" />
+                        }
+                        <span className="text-[10px]">
+                          {promotingId === player.id ? '...' : player.role === 'ADMIN' ? 'Rm Admin' : 'Co-Admin'}
+                        </span>
+                      </button>
+                    )}
                     <button
                       className="flex flex-col items-center gap-1 py-2.5 text-red-400 hover:bg-red-500/10"
                     >

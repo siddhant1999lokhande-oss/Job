@@ -7,6 +7,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ReliabilityBadge } from '@/components/reliability-badge'
 import { cn, getPositionLabel } from '@/lib/utils'
+import { useAdminGuard } from '@/lib/use-admin-guard'
 
 interface PlayerCard {
   id: string
@@ -94,6 +95,8 @@ function PlayerTile({
 export default function TeamBuilderPage({ params }: { params: Promise<{ matchId: string }> }) {
   const { matchId } = use(params)
   const router = useRouter()
+  const { ready } = useAdminGuard()
+
   const [data, setData] = useState<TeamBuilderData | null>(null)
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<Mode>('BALANCED')
@@ -211,6 +214,8 @@ export default function TeamBuilderPage({ params }: { params: Promise<{ matchId:
       `*${t.name}*\n${t.players.map(p => (p.isCaptain ? `⭐ ${p.name} (C)` : `• ${p.name}`)).join('\n')}`
     ).join('\n\n')
   )
+
+  if (!ready) return null
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-gray-950">

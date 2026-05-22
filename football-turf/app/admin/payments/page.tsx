@@ -7,6 +7,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { useAdminGuard } from '@/lib/use-admin-guard'
 
 interface PaymentEntry {
   id: string
@@ -57,6 +58,8 @@ function timeAgo(dateStr: string): string {
 
 export default function AdminPaymentsPage() {
   const router = useRouter()
+  const { ready } = useAdminGuard()
+
   const [payments, setPayments] = useState<PaymentEntry[]>([])
   const [matches, setMatches] = useState<MatchOption[]>([])
   const [loading, setLoading] = useState(true)
@@ -129,6 +132,8 @@ export default function AdminPaymentsPage() {
   const pendingCount = payments.filter(p => p.status === 'PENDING').length
   const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0)
   const paidAmount = payments.filter(p => p.status === 'PAID').reduce((sum, p) => sum + p.amount, 0)
+
+  if (!ready) return null
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-gray-950">
