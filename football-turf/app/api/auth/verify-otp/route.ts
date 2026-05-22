@@ -30,16 +30,17 @@ export async function POST(request: Request) {
     })
 
     let user = await prisma.user.findUnique({ where: { phone } })
+    const isNewUser = !user
 
     if (!user) {
       user = await prisma.user.create({
         data: {
           phone,
-          name: name || phone,
+          name: name || `Player_${phone.slice(-4)}`,
           role: 'PLAYER',
         },
       })
-    } else if (name && !user.name) {
+    } else if (name) {
       user = await prisma.user.update({
         where: { id: user.id },
         data: { name },
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
     return Response.json({
       success: true,
       token,
+      isNewUser,
       user: {
         id: user.id,
         name: user.name,
