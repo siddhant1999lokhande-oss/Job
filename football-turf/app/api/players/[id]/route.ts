@@ -72,20 +72,15 @@ export async function PATCH(
 
     const { id } = await params
 
-    // Only admin or self can update
-    if (session.role !== 'ADMIN' && session.userId !== id) {
+    const isAdmin = session.role === 'ADMIN' || session.role === 'SUPER_ADMIN'
+    if (!isAdmin && session.userId !== id) {
       return Response.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const body = await request.json()
     const {
-      name,
-      preferredPosition,
-      preferredFoot,
-      skillLevel,
-      fitnessLevel,
-      notes,
-      gkWillingness,
+      name, preferredPosition, preferredFoot,
+      skillLevel, fitnessLevel, notes, gkWillingness, isActive,
     } = body
 
     const user = await prisma.user.update({
@@ -98,6 +93,7 @@ export async function PATCH(
         ...(fitnessLevel !== undefined && { fitnessLevel }),
         ...(notes !== undefined && { notes }),
         ...(gkWillingness !== undefined && { gkWillingness }),
+        ...(isActive !== undefined && isAdmin && { isActive }),
       },
       include: {
         reliabilityScore: true,

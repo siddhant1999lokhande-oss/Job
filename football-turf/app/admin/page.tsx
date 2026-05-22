@@ -4,18 +4,17 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  Users, Calendar, DollarSign, AlertTriangle,
-  Plus, Settings, Send, ChevronRight,
+  Users, Calendar, AlertTriangle,
+  Plus, MapPin, Send, ChevronRight,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { formatCurrency } from '@/lib/utils'
 import { useAdminGuard } from '@/lib/use-admin-guard'
 
 interface AdminStats {
   totalPlayers: number
   upcomingMatches: number
-  totalRevenue: number
-  unpaidAmount: number
+  noShowRate: number
+  avgAttendance: number
 }
 
 interface ActivityItem {
@@ -88,7 +87,7 @@ export default function AdminDashboardPage() {
   const quickActions = [
     { label: 'Create Match', icon: Plus, href: '/matches/create', color: 'bg-emerald-500/10 text-emerald-400' },
     { label: 'Manage Players', icon: Users, href: '/admin/players', color: 'bg-blue-500/10 text-blue-400' },
-    { label: 'View Payments', icon: DollarSign, href: '/admin/payments', color: 'bg-amber-500/10 text-amber-400' },
+    { label: 'Venues', icon: MapPin, href: '/admin/venues', color: 'bg-amber-500/10 text-amber-400' },
     { label: 'Announcement', icon: Send, href: '/admin/announce', color: 'bg-purple-500/10 text-purple-400' },
   ]
 
@@ -100,9 +99,6 @@ export default function AdminDashboardPage() {
           <h1 className="text-xl font-extrabold text-white">Admin Dashboard</h1>
           <p className="text-gray-500 text-sm mt-0.5">Manage your football community</p>
         </div>
-        <Link href="/admin/settings" className="w-9 h-9 bg-gray-800 rounded-full flex items-center justify-center border border-gray-700">
-          <Settings className="w-4 h-4 text-gray-400" />
-        </Link>
       </div>
 
       {/* Stats Grid */}
@@ -121,13 +117,13 @@ export default function AdminDashboardPage() {
             color="bg-emerald-500/10 text-emerald-400"
           />
           <StatCard
-            icon={DollarSign} label="Total Revenue" value={formatCurrency(stats.totalRevenue)}
+            icon={AlertTriangle} label="No-show Rate" value={`${stats.noShowRate ?? 0}%`}
             color="bg-amber-500/10 text-amber-400"
           />
           <StatCard
-            icon={AlertTriangle} label="Unpaid" value={formatCurrency(stats.unpaidAmount)}
-            color="bg-red-500/10 text-red-400"
-            subtext="Needs collection"
+            icon={Users} label="Avg Attendance" value={stats.avgAttendance ?? 0}
+            color="bg-purple-500/10 text-purple-400"
+            subtext="Per completed match"
           />
         </div>
       ) : null}
@@ -157,8 +153,9 @@ export default function AdminDashboardPage() {
         <div className="space-y-2">
           {[
             { href: '/admin/matches', label: 'All Matches', desc: 'Edit, cancel, duplicate matches', icon: '🏟️' },
-            { href: '/admin/players', label: 'Player List', desc: 'View and manage all players', icon: '👥' },
-            { href: '/admin/payments', label: 'Payments', desc: 'Track and confirm payments', icon: '💰' },
+            { href: '/admin/players', label: 'Player List', desc: 'View, promote and manage players', icon: '👥' },
+            { href: '/admin/venues', label: 'Venues', desc: 'Add and manage turf locations', icon: '📍' },
+            { href: '/admin/announce', label: 'Announcements', desc: 'Send messages to players', icon: '📢' },
           ].map(item => (
             <Link
               key={item.href}

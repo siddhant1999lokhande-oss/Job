@@ -34,19 +34,13 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* CTA Buttons */}
-          <div className="w-full flex flex-col gap-3">
+          {/* CTA Button */}
+          <div className="w-full">
             <Link
               href="/login"
-              className="btn-primary w-full text-center py-4 text-base font-semibold"
+              className="btn-primary w-full text-center py-4 text-base font-semibold block"
             >
-              Join a Match
-            </Link>
-            <Link
-              href="/login"
-              className="btn-outline w-full text-center py-4 text-base font-semibold"
-            >
-              I&apos;m an Organiser
+              Join a Match →
             </Link>
           </div>
 

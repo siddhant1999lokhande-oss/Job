@@ -102,7 +102,7 @@ export default function DashboardPage() {
   const quickActions = [
     { label: 'Join Match', icon: Zap, href: '/matches', color: 'bg-emerald-500/10 text-emerald-400' },
     { label: 'My Stats', icon: TrendingUp, href: '/profile/stats', color: 'bg-blue-500/10 text-blue-400' },
-    { label: 'Payments', icon: CreditCard, href: '/profile', color: 'bg-amber-500/10 text-amber-400' },
+    { label: 'Profile', icon: CreditCard, href: '/profile', color: 'bg-amber-500/10 text-amber-400' },
     { label: 'Leaderboard', icon: Trophy, href: '/leaderboard', color: 'bg-purple-500/10 text-purple-400' },
   ]
 
